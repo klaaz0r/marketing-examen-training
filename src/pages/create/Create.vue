@@ -79,12 +79,6 @@ export default {
     addItem(e) {
       e.preventDefault()
 
-      // if (this.answers.filter(answer => answer.correct).length > 1) {
-      //   this.message.text = 'Er kan maar een antwoord goed zijn'
-      //   this.message.status = 'ERROR'
-      //   return
-      // }
-
       if (!this.question && !this.description) {
         this.message.text = 'Voer een vraag en uitleg in'
         this.message.status = 'ERROR'
@@ -102,14 +96,6 @@ export default {
           correct: false
         }
       })
-
-      // const hidemessage = setInterval(function() {
-      //   this.message = {
-      //     text: '',
-      //     status: 'HIDDEN'
-      //   }
-      //   clearInterval(hidemessage)
-      // }, 1000)
 
       this.question = ''
       this.description = ''
