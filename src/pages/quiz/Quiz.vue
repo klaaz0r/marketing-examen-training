@@ -1,8 +1,8 @@
 <template>
-<div class="container">
+<div class="container-fluid">
   <!-- <h1>Oefen tentamen</h1> -->
 
-  <div class="container fixed-top">
+  <div class="container-fluid fixed-top">
     <p>je hebt van de {{ totalQuestions }} vragen, {{ totalAnswered }} beantwoord!</p>
     <div class="progress">
       <div class="progress-bar" role="progressbar" v-bind:style="{ width: percentComplete }" v-bind:aria-valuenow="totalAnswered" v-bind:aria-valuemax="totalQuestions" aria-valuemin="0"></div>
@@ -10,21 +10,25 @@
   </div>
 
   <div class="card" v-for="(question, index) in questions">
+    <!-- <pre>{{question}}</pre> -->
     <div class="card-block">
       <p class="card-text">{{question.text}}</p>
       <form>
         <fieldset class="form-group row">
           <legend class="col-form-legend col-sm-2">Antwoord</legend>
           <div class="col-sm-10">
-            <div class="form-check" v-for="(answer, index) in question.answers">
+
+            <div class="form-check" v-for="(answer, answerIndex) in question.answers">
               <label class="form-check-label">
-               <input class="form-check-input" @click="selectedAnswer(index)" type="radio" name="gridRadios" id="gridRadios1">
+               <input class="form-check-input"  @click="selectedAnswer(answerIndex, index, $event)" type="checkbox" name="selectedAnswer">
                {{answer.text}}
              </label>
             </div>
+
           </div>
         </fieldset>
         <button @click="submit(index, $event)" class="btn btn-primary">Submit</button>
+
         <div v-show="question.status.answered">
           <div v-if="question.status.correct">
             <div class="alert alert-success" role="alert">
@@ -39,6 +43,7 @@
             </div>
           </div>
         </div>
+
       </form>
     </div>
   </div>
@@ -48,18 +53,24 @@
 
 <script>
 import db from '../../database'
+import {
+  contains,
+  isEmpty,
+  reject
+} from 'ramda'
+
 export default {
   name: 'hello',
   data() {
-    return {}
+    return {
+      checked: false
+      // selectedAnswers: []
+    }
   },
   firebase: {
     questions: db.ref('questions')
   },
   computed: {
-    // questions: function() {
-    //   return this.questions
-    // },
     totalQuestions: function() {
       return this.questions.length
     },
@@ -72,15 +83,35 @@ export default {
     }
   },
   methods: {
-    selectedAnswer(index) {
-      this.selectedAnswerIndex = index
+    selectedAnswer(answerIndex, questionIndex, $event) {
+      if (!this.questions[questionIndex].status.selectedAnswers) {
+        this.questions[questionIndex].status.selectedAnswers = []
+      }
+
+      if ($event.srcElement.checked) {
+        this.questions[questionIndex].status.selectedAnswers.push(answerIndex)
+      } else {
+        const removeUnselected = reject(answer => answer === answerIndex, this.questions[questionIndex].status.selectedAnswers)
+        this.questions[questionIndex].status.selectedAnswers = removeUnselected
+      }
+
     },
     submit(index, e) {
       e.preventDefault()
       const currentQuestion = this.questions[index]
-      const answered = currentQuestion.answers[this.selectedAnswerIndex]
+      const answers = currentQuestion.status.selectedAnswers.map(index => {
+        return currentQuestion.answers[index].correct
+      })
+
+      if (contains(false, answers) || isEmpty(answers)) {
+        this.questions[index].status.correct = false
+      } else {
+        this.questions[index].status.correct = true
+      }
+
       this.questions[index].status.answered = true
-      this.questions[index].status.correct = answered.correct
+      this.questions[index].status.selectedAnswers = []
+      // this.selectedAnswers = []
     }
   }
 }
