@@ -46,11 +46,15 @@
 
 <script>
 import db from '../../database'
+import {
+  isEmpty
+} from 'ramda'
 
 export default {
   name: 'create',
   data() {
     return {
+      key: null,
       question: '',
       description: '',
       answers: [{
@@ -75,6 +79,14 @@ export default {
   firebase: {
     questions: db.ref('questions')
   },
+  created() {
+    if (!isEmpty(this.$route.params)) {
+      this.key = this.$route.params.question['.key']
+      this.question = this.$route.params.question.text
+      this.description = this.$route.params.question.description
+      this.answers = this.$route.params.question.answers
+    }
+  },
   methods: {
     addItem(e) {
       e.preventDefault()
@@ -85,9 +97,7 @@ export default {
         return
       }
 
-      this.message.status = 'SUCCESS'
-
-      this.$firebaseRefs.questions.push({
+      const question = {
         text: this.question,
         description: this.description,
         answers: this.answers,
@@ -95,7 +105,15 @@ export default {
           answered: false,
           correct: false
         }
-      })
+      }
+
+      this.message.status = 'SUCCESS'
+
+      if (this.key) {
+        this.$firebaseRefs.questions.child(this.key).set(question)
+      } else {
+        this.$firebaseRefs.questions.push(question)
+      }
 
       this.question = ''
       this.description = ''

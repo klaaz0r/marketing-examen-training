@@ -10,9 +10,11 @@
   </div>
 
   <div class="card" v-for="(question, index) in questions">
-    <!-- <pre>{{question}}</pre> -->
+
     <div class="card-block">
+      <a href="#" class="edit" @click="toggleUpdate(question, $event)">edit</a>
       <p class="card-text">{{question.text}}</p>
+
       <form>
         <fieldset class="form-group row">
           <legend class="col-form-legend col-sm-2">Antwoord</legend>
@@ -58,14 +60,11 @@ import {
   isEmpty,
   reject
 } from 'ramda'
-
+import router from '../../router'
 export default {
   name: 'hello',
   data() {
-    return {
-      checked: false
-      // selectedAnswers: []
-    }
+    return {}
   },
   firebase: {
     questions: db.ref('questions')
@@ -87,14 +86,16 @@ export default {
       if (!this.questions[questionIndex].status.selectedAnswers) {
         this.questions[questionIndex].status.selectedAnswers = []
       }
-
       if ($event.srcElement.checked) {
         this.questions[questionIndex].status.selectedAnswers.push(answerIndex)
       } else {
         const removeUnselected = reject(answer => answer === answerIndex, this.questions[questionIndex].status.selectedAnswers)
         this.questions[questionIndex].status.selectedAnswers = removeUnselected
       }
-
+    },
+    toggleUpdate(question, e) {
+      e.preventDefault()
+      router.push({ name: 'Create', params: { question }})
     },
     submit(index, e) {
       e.preventDefault()
@@ -139,7 +140,30 @@ export default {
 }
 
 .alert p {
+  padding-top: 20px;
   font-size: 18px;
+}
+
+.edit {
+  float: right;
+}
+
+.editor {
+  padding: 12px;
+}
+
+.code {
+  /*background-color: #0275d8;*/
+  padding: 15px;
+  border-radius: 12px;
+}
+
+textarea {
+  /*background-color: #272822;
+  color: #FD971F;
+  font-weight: bold;*/
+  width: 100%;
+  height: 550px;
 }
 
 .quiz-status {
